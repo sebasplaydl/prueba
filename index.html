@@ -1,0 +1,656 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de Horas</title>
+</head>
+
+<!-- Web Form principal (registro de horas) -->
+<div class="row sectionBlockLayout" style="margin: 0; padding: 0; width: 100%; display: flex; justify-content: center;">
+  <div class="container-fluid" style="padding: 40px;">
+    <div class="registro-layout">
+
+      <!-- Bloque izquierdo: formulario -->
+      <div class="registro-form registro-box">
+        <div class="logo-daplast">
+  <img src="https://daplast.com/wp-content/uploads/2022/06/logo-daplast.png" alt="Logo Daplast" />
+</div>
+        <h1>Registro de horas de trabajo</h1>
+
+        <!-- Datos del empleado -->
+        <div class="form-row" style="margin-bottom: 20px;">
+          <div class="form-group">
+            <label for="empleadoId">ID Empleado</label>
+            <input type="number" id="empleadoId" placeholder="Ej. 100" required />
+          </div>
+          <div class="form-group">
+  <label for="empleadoTurno">Turno</label>
+  <select id="empleadoTurno" required>
+    <option value="" disabled selected>Seleccione un turno</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="PARTIDO">TURNO PARTIDO</option>
+  </select>
+</div>
+          <div class="form-group">
+            <label for="claveEmpleado">Clave de acceso</label>
+            <input type="password" id="claveEmpleado" placeholder="Clave proporcionada por la empresa" required />
+          </div>
+          <div class="form-group">
+            <label for="fechaTrabajo">Fecha de trabajo</label>
+            <input type="date" id="fechaTrabajo" required />
+          </div>
+          <!-- Checkbox para mostrar las horas de bolsa -->
+<div class="form-group">
+  <label>
+    <input type="checkbox" id="activarBolsa" onchange="toggleHorasBolsa()" />
+    ¿Quieres registrar horas de bolsa?
+  </label>
+</div>
+
+<!-- Campos de bolsa ocultos inicialmente -->
+<div class="form-group" id="bloqueHorasBolsa" style="display: none;">
+  <label for="bolsaHoras">Horas de Bolsa</label>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <div style="display: flex; align-items: center;">
+      <input type="number" id="bolsaHoras" inputmode="numeric" pattern="[0-9]*" value="0" min="0" style="width: 60px;" />h
+    </div>
+    <div style="display: flex; align-items: center;">
+      <input type="number" id="bolsaMinutos" inputmode="numeric" pattern="[0-9]*" value="0" min="0" max="59" step="5" style="width: 60px;" />m
+    </div>
+  </div>
+</div>
+
+        </div>
+
+        <!-- Sección de Centros -->
+        <div class="section-title">Centros de Trabajo</div>
+        <div id="centros" class="centros-container" style="margin-top: 20px;"></div>
+        <button type="button" onclick="agregarCentro()" class="secondary-btn">+ Agregar Centro</button>
+      </div>
+
+      <!-- Bloque derecho: resumen -->
+      <div class="registro-resumen">
+        <div class="section-title">Resumen Total</div>
+        <div class="summary">
+          <div><span id="total-normales">0</span>h<br />Horas Normales</div>
+          <div><span id="total-extras">0</span>h<br />Horas Extras</div>
+          <div><span id="total-horas">0</span>h<br />Total</div>
+        </div>
+        <br />
+        <button id="btn-guardar" type="button" class="primary-btn">Guardar Registro</button>
+
+        <div id="spinner" style="display: none; margin-top: 15px; text-align: center;">
+          <div class="loader"></div>
+          <p style="margin-top: 8px; font-size: 14px; color: #333;">Enviando registro...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Estilos Responsivos -->
+<style>
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Cargando */
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #7ee134;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Contenedor principal */
+.registro-box {
+  width: 100%;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .registro-box {
+    max-width: 960px;
+  }
+}
+
+@media (max-width: 767px) {
+  .registro-form,
+  .registro-resumen {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .registro-box {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
+/* Layout responsive */
+.registro-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Filas y grupos de formulario */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.form-group {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .form-group {
+    flex: 1 1 45%;
+  }
+}
+
+/* Alinear inputs inferiores */
+.form-group > div {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input, select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Títulos de sección */
+.section-title {
+  font-weight: bold;
+  font-size: 22px;
+  margin-bottom: 20px;
+  margin-top: 10px; 
+  color: #333;
+  padding-left: 10px;
+}
+
+.registro-resumen {
+  padding-top: 20px;
+}
+
+/* Resumen de horas */
+.summary {
+  background-color: #f0f8f4;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  text-align: center;
+}
+
+.summary > div {
+  flex: 1 1 100%;
+}
+
+@media (min-width: 600px) {
+  .summary > div {
+    flex: 1 1 30%;
+  }
+}
+
+/* Botones base */
+.btn {
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+/* Botón eliminar */
+.remove-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #c00;
+  float: right;
+  margin-bottom: 5px;
+}
+
+/* Alinear botón eliminar a la derecha */
+.form-row:has(.remove-btn) {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+/* Subtotales */
+.subtotal {
+  margin-top: 10px;
+  font-weight: bold;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* Contenedor de centros */
+#centros {
+  border: 1px solid #eaeaea;
+  padding: 12px;
+}
+
+.centro-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Botón primario */
+.primary-btn {
+  width: 100%;
+  border: none;
+  background-color: #c5d800;
+  color: #044a80;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+/* Botón secundario */
+.secondary-btn {
+  border: 2px solid #044a80;
+  background-color: white;
+  color: #333333;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* Diseño en escritorio */
+@media (min-width: 992px) {
+  .registro-layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .registro-form {
+    flex: 1 1 65%;
+  }
+
+  .registro-resumen {
+    flex: 1 1 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 30px;
+  }
+
+  .registro-box {
+    height: 100%;
+  }
+
+  .summary {
+    text-align: center;
+  }
+}
+
+.logo-daplast {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo-daplast img {
+  max-width: 200px;
+  height: auto;
+}
+</style>
+
+<!-- Script de lógica -->
+<script>
+let index = 0;
+
+function toggleHorasBolsa() {
+  const checkbox = document.getElementById("activarBolsa");
+  const bloque = document.getElementById("bloqueHorasBolsa");
+  if (checkbox.checked) {
+    bloque.style.display = "block";
+  } else {
+    bloque.style.display = "none";
+    // Opcional: reiniciar valores
+    document.getElementById("bolsaHoras").value = "0";
+    document.getElementById("bolsaMinutos").value = "0";
+  }
+}
+
+
+function agregarCentro() {
+  index++;
+  const container = document.getElementById("centros");
+  const box = document.createElement("div");
+  box.className = "centro-box";
+  box.style.marginBottom = "20px";
+
+
+
+box.innerHTML = `
+<div class="form-row" style="justify-content: flex-start;">
+  <div class="form-group" style="flex: none;">
+    <button class="remove-btn" onclick="this.closest('.centro-box').remove(); actualizarResumen();">🗑️</button>
+  </div>
+</div>
+
+    <!-- Fila 1: Centro -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Centro</label>
+        <select name="centros[${index}][id]" onchange="actualizarResumen()">
+          <option value="1" selected>1 - INYECCIÓN</option>
+          <option value="2">2 - MONTAJES</option>
+          <option value="4">4 - CAMBIO DE MOLDE</option>
+          <option value="6">6 - RECEPCIÓN MATERIALES</option>
+          <option value="8">8 - OTROS</option>
+          <option value="9">9 - TALLER</option>
+          <option value="10">10 - MOLINO</option>
+          <option value="11">11 - MEZCLAS</option>
+          <option value="12">12 - COMPRAS Y PORTES DE MATERIALES</option>
+          <option value="13">13 - MEJORAS</option>
+          <option value="15">15 - CORTES DE LUZ</option>
+          <option value="16">16 - ABSENTISMO</option>
+          <option value="20">20 - SOCIOS</option>
+          <option value="22">22 - LAVADERO</option>
+          <option value="23">23 - FORMACIÓN</option>
+          <option value="23">24 - INVENTARIO</option>
+          <option value="25">25 - ORDEN Y LIMPIEZA</option>
+          <option value="26">26 - TEMAS DE OFICINA</option>
+          <option value="28">28 - HORAS MONTAJE FÁBRICA</option>
+          <option value="29">29 - HORAS A COMPENSAR</option>
+          <option value="31">31 - MANTENIMIENTO INYECCIÓN</option>
+          <option value="32">32 - MANTENIMIENTO TALLER</option>
+          <option value="33">33 - MANTENIMIENTO OTROS</option>
+          <option value="34">34 - MANTENIMIENTO SOPLADO</option>
+          <option value="40">40 - MOLINO SOPLADO</option>
+          <option value="41">41 - MAQ Y CAMBIO MOLDE SOPLADO</option>
+          <option value="42">42 - MEZCLAS SOPLADO</option>
+          <option value="51">51 - EXPEDICIÓN CAJAS Y OTROS</option>
+          <option value="52">52 - EXPEDICIÓN ASIENTOS Y TRIBUNAS</option>
+          <option value="53">53 - EXPEDICIONES MUESTRAS</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fila 2: Horas normales y extras -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Horas Normales</label>
+        <div style="display: flex; gap: 5px;">
+          <input type="number" name="centros[${index}][normalesHoras]" inputmode="numeric" pattern="[0-9]*" value="0" min="0" oninput="actualizarResumen()" style="width: 60px;" />h
+          <input type="number" name="centros[${index}][normalesMin]" inputmode="numeric" pattern="[0-9]*" value="0" min="0" max="59" step="5" oninput="actualizarResumen()" style="width: 60px;" />m
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Horas Extras</label>
+        <div style="display: flex; gap: 5px;">
+          <input type="number" name="centros[${index}][extrasHoras]" inputmode="numeric" pattern="[0-9]*" value="0" min="0" oninput="actualizarResumen()" style="width: 60px;" />h
+          <input type="number" name="centros[${index}][extrasMin]" inputmode="numeric" pattern="[0-9]*" value="0" min="0" max="59" step="5" oninput="actualizarResumen()" style="width: 60px;" />m
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 3: Descripción -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Descripción</label> <input type="text" name="centros[${index}][descripcion]" pattern="^[^!+=-].*" placeholder="Escribe una observación (opcional)" />
+      </div>
+    </div>
+
+    <!-- Fila 4: Subtotal -->
+    <div class="subtotal">Subtotal Centro: <span class="subtotal-text">0h normales + 0h extras = 0h totales</span></div>
+  `;
+
+  container.appendChild(box);
+  $(box).find('select').select2({
+  width: '100%',
+  placeholder: 'Selecciona un centro',
+  language: 'es'
+});
+}
+
+
+function hhmmStringFromMinutes(totalMin) {
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}.${String(m).padStart(2, '0')}`;
+}
+
+function actualizarResumen() {
+  const centros = document.querySelectorAll(".centro-box");
+  let totalMinNormales = 0;
+  let totalMinExtras   = 0;
+
+  centros.forEach(box => {
+    const nH = parseInt(box.querySelector('input[name*="[normalesHoras]"]').value) || 0;
+    const nM = parseInt(box.querySelector('input[name*="[normalesMin]"]').value)   || 0;
+    const eH = parseInt(box.querySelector('input[name*="[extrasHoras]"]').value)   || 0;
+    const eM = parseInt(box.querySelector('input[name*="[extrasMin]"]').value)     || 0;
+
+    // Para mostrar igual que se introduce: H.MM
+    const nTotalMin = nH * 60 + nM;
+    const eTotalMin = eH * 60 + eM;
+    const subMin    = nTotalMin + eTotalMin;
+
+    totalMinNormales += nTotalMin;
+    totalMinExtras   += eTotalMin;
+
+    box.querySelector(".subtotal-text").innerText =
+      `${hhmmStringFromMinutes(nTotalMin)} normales + ${hhmmStringFromMinutes(eTotalMin)} extras = ${hhmmStringFromMinutes(subMin)} totales`;
+  });
+
+  const totalMin = totalMinNormales + totalMinExtras;
+
+  // Panel derecho: mostrar en H.MM (no decimal)
+  document.getElementById("total-normales").innerText = hhmmStringFromMinutes(totalMinNormales);
+  document.getElementById("total-extras").innerText   = hhmmStringFromMinutes(totalMinExtras);
+  document.getElementById("total-horas").innerText    = hhmmStringFromMinutes(totalMin);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const fechaInput = document.getElementById("fechaTrabajo");
+  if (fechaInput && !fechaInput.value) {
+    const hoy = new Date().toISOString().split("T")[0];
+    fechaInput.value = hoy;
+    fechaInput.max = hoy;
+  }
+  // Agregar primer centro automáticamente al cargar
+  agregarCentro();
+});
+</script>
+
+<!-- Botón Guardar (se mantiene sin cambios salvo estilo aplicado arriba) -->
+<script>
+document.getElementById('btn-guardar').addEventListener('click', async () => {
+  const empleadoId = document.getElementById("empleadoId")?.value.trim();
+  const empleadoTurno = document.getElementById("empleadoTurno")?.value.trim();
+  const claveIngresada = document.getElementById("claveEmpleado")?.value.trim();
+
+  if (!empleadoId || isNaN(empleadoId)) {
+    alert("Debe ingresar un ID de empleado válido.");
+    return;
+  }
+
+if (!empleadoTurno || (empleadoTurno !== "1" && empleadoTurno !== "2" && empleadoTurno !== "3" && empleadoTurno !== "PARTIDO")) {
+  alert("Debe seleccionar un turno válido: 1, 2, 3 o TURNO PARTIDO.");
+  return;
+}
+
+  const fechaTrabajo = document.getElementById("fechaTrabajo")?.value;
+  const centros = [];
+  let resumenTexto = "";
+  let errorDetectado = false;
+
+  document.querySelectorAll(".centro-box").forEach(box => {
+    const id = parseInt(box.querySelector('select[name*="[id]"]').value) || 0;
+    const normalesHoras = parseInt(box.querySelector('input[name*="[normalesHoras]"]').value) || 0;
+    const normalesMin = parseInt(box.querySelector('input[name*="[normalesMin]"]').value) || 0;
+    const extrasHoras = parseInt(box.querySelector('input[name*="[extrasHoras]"]').value) || 0;
+    const extrasMin = parseInt(box.querySelector('input[name*="[extrasMin]"]').value) || 0;
+    const descripcion = box.querySelector('input[name*="[descripcion]"]').value.trim() || "";
+    if ((id === 2 || id === 13) && descripcion === "") {
+  alert(`⚠️ El centro ${id} requiere que se complete la descripción.`);
+  errorDetectado = true;
+  return;
+}
+
+    const normales = Math.round((normalesHoras + normalesMin / 60) * 100) / 100;
+    const extras = Math.round((extrasHoras + extrasMin / 60) * 100) / 100;
+
+    if (normales < 0 || extras < 0) {
+      alert(`❌ En el centro ${id}, las horas no pueden ser negativas.`);
+      errorDetectado = true;
+      return;
+    }
+
+    centros.push({ IDCentro: id, HorasNormales: normales, HorasExtras: extras, Descripcion: descripcion });
+    resumenTexto += `Centro ${id}: ${normales.toFixed(2)}h normales + ${extras.toFixed(2)}h extras = ${(normales + extras).toFixed(2)}h totales\n`;
+  });
+
+  if (errorDetectado) return;
+  if (centros.length === 0) {
+    alert("Debe agregar al menos un centro de trabajo.");
+    return;
+  }
+  const alMenosUnCentroConHoras = centros.some(c => (c.HorasNormales + c.HorasExtras) > 0);
+  if (!alMenosUnCentroConHoras) {
+    alert("Debe completar al menos un centro con horas (normales o extras).");
+    return;
+  }
+
+  const totalNormales = centros.reduce((sum, c) => sum + c.HorasNormales, 0);
+  const totalExtras = centros.reduce((sum, c) => sum + c.HorasExtras, 0);
+  const totalHoras = totalNormales + totalExtras;
+
+  resumenTexto += `\nTOTAL: ${totalNormales}h normales + ${totalExtras}h extras = ${totalHoras}h`;
+
+const confirmar = confirm(`¿Desea guardar el siguiente registro?\n\nEmpleado ID: ${empleadoId}\nFecha: ${fechaTrabajo}\n\n${resumenTexto}`);
+if (!confirmar) return;
+
+// --- Bolsa de trabajo (opcional) ---
+const bolsaH = parseInt(document.getElementById("bolsaHoras")?.value) || 0;
+const bolsaM = parseInt(document.getElementById("bolsaMinutos")?.value) || 0;
+const bolsaTotal = Math.round((bolsaH + bolsaM / 60) * 100) / 100;
+
+const payload = {
+  EmpleadoID: empleadoId,
+  Turno: empleadoTurno,
+  Clave: claveIngresada,
+  FechaTrabajo: fechaTrabajo,
+  BolsaTrabajo: bolsaTotal,
+  Centros: centros
+};
+
+// Mostrar spinner y deshabilitar botón
+document.getElementById("spinner").style.display = "block";
+document.getElementById("btn-guardar").disabled = true;
+//el enlace https que viene ahora proviene del flujo de power auotmate, y es el que hay que cambiar en caso de que microsoft lo actualice
+try {
+  const response = await fetch("https://default9057cb6da67347c7b025e86c6b54bd.2d.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/cbed40a34f5a4f46ba9671b2135f7b53/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=umn10s1w4wQzkN7kHvcZu1enKJbNiWtyb0yVQrl4PCo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+
+  // Ocultar spinner y habilitar botón
+  document.getElementById("spinner").style.display = "none";
+  document.getElementById("btn-guardar").disabled = false;
+
+if (response.ok && data.resultado === "ok") {
+  alert("✅ Registro guardado exitosamente. Revise su correo electrónico para consultar los detalles.");
+
+  // Resetear campos del formulario
+  document.getElementById("empleadoId").value = "";
+  document.getElementById("empleadoTurno").value = "";
+  document.getElementById("claveEmpleado").value = "";
+  document.getElementById("bolsaHoras").value = "0";
+  document.getElementById("bolsaMinutos").value = "0";
+
+  // Fecha: establecer a hoy
+  const hoy = new Date().toISOString().split("T")[0];
+  const fechaInput = document.getElementById("fechaTrabajo");
+  fechaInput.value = hoy;
+
+  // Borrar centros y reiniciar resumen
+  document.getElementById("centros").innerHTML = "";
+  document.getElementById("total-normales").innerText = "0.00";
+  document.getElementById("total-extras").innerText = "0.00";
+  document.getElementById("total-horas").innerText = "0.00";
+
+  // Agregar centro vacío por defecto
+  agregarCentro();
+}
+else if (data.resultado === "clave_incorrecta") {
+    alert("❌ Clave incorrecta. Verifique e intente de nuevo.");
+  } else {
+    alert("⚠️ Error desconocido en la respuesta del flujo.");
+  }
+} catch (error) {
+  document.getElementById("spinner").style.display = "none";
+  document.getElementById("btn-guardar").disabled = false;
+  alert("⚠️ Error de red al conectar con Power Automate");
+  console.error(error);
+}
+});
+</script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js">
+
+</script>
